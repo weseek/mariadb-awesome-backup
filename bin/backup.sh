@@ -2,14 +2,13 @@
 
 # settings
 BACKUPFILE_PREFIX=${BACKUPFILE_PREFIX:-backup}
-MONGODB_HOST=${MONGODB_HOST:-mongo}
+MARIADB_HOST=${MARIADB_HOST:-mariadb}
 CRONMODE=${CRONMODE:-false}
-#MONGODB_HOST=
-#MONGODB_DBNAME=
-#MONGODB_USERNAME=
-#MONGODB_PASSWORD=
-#MONGODB_AUTHDB=
-#MONGODUMP_OPTS=
+#MARIADB_HOST=
+#MARIADB_DBNAME=
+#MARIADB_USERNAME=
+#MARIADB_PASSWORD=
+#MYSQLDUMP_OPTS=
 #TARGET_BUCKET_URL=[s3://... | gs://...] (must be ended with /)
 
 # start script
@@ -22,15 +21,13 @@ NOW=`create_current_yyyymmddhhmmss`
 echo "=== $0 started at `/bin/date "+%Y/%m/%d %H:%M:%S"` ==="
 
 TMPDIR="/tmp"
-TARGET_DIRNAME="mongodump"
-TARGET="${TMPDIR}/${TARGET_DIRNAME}"
-TAR_CMD="/bin/tar"
-TAR_OPTS="jcvf"
+TARGET_FILENAME="${BACKUPFILE_PREFIX}-${NOW}.sql"
+TARGET="${TMPDIR}/${TARGET_FILENAME}"
+COMPRESS_CMD="bzip2"
 
 DIRNAME=`/usr/bin/dirname ${TARGET}`
 BASENAME=`/usr/bin/basename ${TARGET}`
-TARBALL="${BACKUPFILE_PREFIX}-${NOW}.tar.bz2"
-TARBALL_FULLPATH="${TMPDIR}/${TARBALL}"
+COMPRESSED_FULLPATH="${TMPDIR}/${TARGET_FILENAME}.bz2"
 
 
 # check parameters
@@ -46,31 +43,31 @@ fi
 
 
 # dump database
-if [ "x${MONGODB_DBNAME}" != "x" ]; then
-  MONGODUMP_OPTS="${MONGODUMP_OPTS} -d ${MONGODB_DBNAME}"
+if [ "x${MARIADB_DBNAME}" != "x" ]; then
+  MYSQLDUMP_OPTS="${MYSQLDUMP_OPTS} -d ${MARIADB_DBNAME}"
 fi
-if [ "x${MONGODB_USERNAME}" != "x" ]; then
-  MONGODUMP_OPTS="${MONGODUMP_OPTS} -u ${MONGODB_USERNAME} -p ${MONGODB_PASSWORD}"
+if [ "x${MARIADB_USERNAME}" != "x" ]; then
+  MYSQLDUMP_OPTS="${MYSQLDUMP_OPTS} -u ${MARIADB_USERNAME}"
+  if [ "x${MARIADB_PASSWORD}" != "x" ]; then
+    MYSQLDUMP_OPTS="${MYSQLDUMP_OPTS} -p${MARIADB_PASSWORD}"
+  fi
 fi
-if [ "x${MONGODB_AUTHDB}" != "x" ]; then
-  MONGODUMP_OPTS="${MONGODUMP_OPTS} --authenticationDatabase ${MONGODB_AUTHDB}"
-fi
-echo "dump MongoDB..."
-mongodump -h ${MONGODB_HOST} -o ${TARGET} ${MONGODUMP_OPTS}
+echo "dump MariaDB..."
+mysqldump -h ${MARIADB_HOST} ${MYSQLDUMP_OPTS} > ${TARGET}
 
-# run tar command
+# run bzip2 command
 echo "backup ${TARGET}..."
-time ${TAR_CMD} ${TAR_OPTS} ${TARBALL_FULLPATH} -C ${DIRNAME} ${BASENAME}
+time ${COMPRESS_CMD} ${TARGET}
 
 if [ `echo $TARGET_BUCKET_URL | cut -f1 -d":"` == "s3" ]; then
   # transfer tarball to Amazon S3
-  s3_copy_file ${TARBALL_FULLPATH} ${TARGET_BUCKET_URL}
+  s3_copy_file ${COMPRESSED_FULLPATH} ${TARGET_BUCKET_URL}
 elif [ `echo $TARGET_BUCKET_URL | cut -f1 -d":"` == "gs" ]; then
-  gs_copy_file ${TARBALL_FULLPATH} ${TARGET_BUCKET_URL}
+  gs_copy_file ${COMPRESSED_FULLPATH} ${TARGET_BUCKET_URL}
 fi
 
 # clean up working files if in cron mode
 if ${CRONMODE} ; then
   rm -rf ${TARGET}
-  rm -f ${TARBALL_FULLPATH}
+  rm -f ${COMPRESSED_FULLPATH}
 fi
