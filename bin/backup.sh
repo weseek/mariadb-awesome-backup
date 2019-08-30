@@ -43,14 +43,16 @@ fi
 
 
 # dump database
-if [ "x${MARIADB_DBNAME}" != "x" ]; then
-  MYSQLDUMP_OPTS="${MYSQLDUMP_OPTS} -d ${MARIADB_DBNAME}"
-fi
 if [ "x${MARIADB_USERNAME}" != "x" ]; then
   MYSQLDUMP_OPTS="${MYSQLDUMP_OPTS} -u ${MARIADB_USERNAME}"
   if [ "x${MARIADB_PASSWORD}" != "x" ]; then
     MYSQLDUMP_OPTS="${MYSQLDUMP_OPTS} -p${MARIADB_PASSWORD}"
   fi
+fi
+if [ "x${MARIADB_DBNAME}" != "x" ]; then
+  MYSQLDUMP_OPTS="${MYSQLDUMP_OPTS} ${MARIADB_DBNAME}"
+else
+  MYSQLDUMP_OPTS="${MYSQLDUMP_OPTS} --all-databases"
 fi
 echo "dump MariaDB..."
 mysqldump -h ${MARIADB_HOST} ${MYSQLDUMP_OPTS} > ${TARGET}
