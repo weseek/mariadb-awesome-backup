@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.10
 
 LABEL maintainer="WESEEK <info@weseek.co.jp>"
 
@@ -7,7 +7,7 @@ RUN apk add --no-cache \
     bash \
     tzdata \
     py2-pip \
-    mongodb-tools \
+    mariadb-client \
     curl
     
 RUN pip install awscli
