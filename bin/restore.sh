@@ -15,6 +15,7 @@ echo "=== $0 started at `/bin/date "+%Y/%m/%d %H:%M:%S"` ==="
 TMPDIR="/tmp"
 TARGET="${TMPDIR}/${TARGET_FILE}"
 COMPRESS_CMD="bzip2"
+COMPRESS_OPTS="-dc"
 COMPRESSED_FULLURL=${TARGET_BUCKET_URL}${TARGET_FILE}
 
 
@@ -44,4 +45,4 @@ if [ "x${MARIADB_USERNAME}" != "x" ]; then
 fi
 
 echo "expand ${TARGET} and restore..."
-time ${COMPRESS_CMD} -dc ${TARGET} | mysql -h ${MARIADB_HOST} ${MYSQL_OPTS}
+time ${COMPRESS_CMD} ${COMPRESS_OPTS} ${TARGET} | mysql -h ${MARIADB_HOST} ${MYSQL_OPTS}
