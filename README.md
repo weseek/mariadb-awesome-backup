@@ -36,16 +36,16 @@ docker run --rm \
   [ -e GCP_PROJECT_ID=<Your GCP Project ID> \ ]
   -e TARGET_BUCKET_URL=<Target Bucket URL ([s3://...|gs://...])> \
   [ -e BACKUPFILE_PREFIX=<Prefix of Backup Filename (default: "backup") \ ]
-  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
+  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mariadb")> \ ]
   [ -e MARIADB_DBNAME=<Target DB name> \ ]
   [ -e MARIADB_USERNAME=<DB login username> \ ]
   [ -e MARIADB_PASSWORD=<DB login password> \ ]
-  [ -e MARIADB_AUTHDB=<Authentication DB name> \ ]
+  [ -e MYSQLDUMP_OPTS=<Options list of mysqldump> \ ]
   [ -v ~:/mab \ ]
   weseek/mariadb-awesome-backup
 ```
 
-and after running this, `backup-YYYYMMdd.tar.bz2` will be placed on Target S3 Bucket.
+And after running this, `backup-YYYYMMdd.tar.bz2` will be placed on the target S3 or GCS bucket.
 
 ### How to backup in cron mode
 
@@ -62,11 +62,11 @@ docker run --rm \
   -e CRONMODE=true \
   -e CRON_EXPRESSION=<Cron expression (ex. "CRON_EXPRESSION='0 4 * * *'" if you want to run at 4:00 every day)> \
   [ -e BACKUPFILE_PREFIX=<Prefix of Backup Filename (default: "backup") \ ]
-  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
+  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mariadb")> \ ]
   [ -e MARIADB_DBNAME=<Target DB name> \ ]
   [ -e MARIADB_USERNAME=<DB login username> \ ]
   [ -e MARIADB_PASSWORD=<DB login password> \ ]
-  [ -e MARIADB_AUTHDB=<Authentication DB name> \ ]
+  [ -e MYSQLDUMP_OPTS=<Options list of mysqldump> \ ]
   [ -v ~:/mab \ ]
   weseek/mariadb-awesome-backup
 ```
@@ -84,12 +84,11 @@ docker run --rm \
   [ -e GCP_PROJECT_ID=<Your GCP Project ID> \ ]
   -e TARGET_BUCKET_URL=<Target Bucket URL ([s3://...|gs://...])> \
   -e TARGET_FILE=<Target S3 or GS file name to restore> \
-  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
+  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mariadb")> \ ]
   [ -e MARIADB_DBNAME=<Target DB name> \ ]
   [ -e MARIADB_USERNAME=<DB login username> \ ]
   [ -e MARIADB_PASSWORD=<DB login password> \ ]
-  [ -e MARIADB_AUTHDB=<Authentication DB name> \ ]
-  [ -e MONGORESTORE_OPTS=<Options list of mongorestore> \ ]
+  [ -e MYSQL_OPTS=<Options list of mysql> \ ]
   [ -v ~:/mab \ ]
   weseek/mariadb-awesome-backup restore
 ```
@@ -99,52 +98,50 @@ Environment variables
 ---------
 
 ### For `backup`, `prune`, `list`
-
 #### Required
 
-| Variable              | Description                                                           | Default |
-| --------------------- | --------------------------------------------------------------------- | ------- |
-| AWS_ACCESS_KEY_ID     | Your IAM Access Key ID                                                |         |
-| AWS_SECRET_ACCESS_KEY | Your IAM Secret Access Key                                            |         |
-| TARGET_BUCKET_URL     | Target Bucket URL ([s3://...\|gs://...]). **URL is needed to be end with '/'**  |         |
+| Variable                | Description                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| `AWS_ACCESS_KEY_ID`     | Your IAM Access Key ID                                                              |
+| `AWS_SECRET_ACCESS_KEY` | Your IAM Secret Access Key                                                          |
+| `GCP_ACCESS_KEY_ID`     | Your GCP Access Key                                                                 |
+| `GCP_SECRET_ACCESS_KEY` | Your GCP Secret                                                                     |
+| `GCP_PROJECT_ID`        | Your GCP Project ID                                                                 |
+| `TARGET_BUCKET_URL`     | Target Bucket URL ([s3://... or gs://...]).<br>**URL is needed to be end with '/'** |
 
 #### Optional
 
-| Variable          | Description                                                                                                                                                                   | Default |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| GCP_ACCESS_KEY_ID     | Your GCP Access Key                                                   |         |
-| GCP_SECRET_ACCESS_KEY | Your GCP Secret                                                       |         |
-| GCP_PROJECT_ID        | Your GCP Project ID                                                   |         |
-| BACKUPFILE_PREFIX | Prefix of Backup Filename                                                                                                                                                     | backup  |
-| MARIADB_HOST      | Target MariaDB Host                                                                                                                                                           | mongo   |
-| MARIADB_DBNAME    | Target DB name                                                                                                                                                                | -       |
-| MARIADB_USERNAME  | DB login username                                                                                                                                                             | -       |
-| MARIADB_PASSWORD  | DB login password                                                                                                                                                             | -       |
-| MARIADB_AUTHDB    | Authentication DB name                                                                                                                                                        | -       |
-| CRONMODE          | If set "true", this container is executed in cron mode.  In cron mode, the script will be executed with the specified arguments and at the time specified by CRON_EXPRESSION. | "false" |
-| CRON_EXPRESSION   | Cron expression (ex. "CRON_EXPRESSION=0 4 * * *" if you want to run at 4:00 every day)                                                                                        | -       |
+| Variable            | Description                                                                                                                                                                       | Default     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `BACKUPFILE_PREFIX` | Prefix of Backup Filename                                                                                                                                                         | `"backup"`  |
+| `MARIADB_HOST`      | Target MariaDB Host                                                                                                                                                               | `"mariadb"` |
+| `MARIADB_DBNAME`    | Target DB name                                                                                                                                                                    | -           |
+| `MARIADB_USERNAME`  | DB login username                                                                                                                                                                 | -           |
+| `MARIADB_PASSWORD`  | DB login password                                                                                                                                                                 | -           |
+| `MYSQLDUMP_OPTS`    | Options list of mysqldump                                                                                                                                                         | -           |
+| `CRONMODE`          | If set `"true"`, this container is executed in cron mode.  In cron mode, the script will be executed with the specified arguments and at the time specified by `CRON_EXPRESSION`. | `"false"`   |
+| `CRON_EXPRESSION`   | Cron expression (ex. `"CRON_EXPRESSION=0 4 * * *"` if you want to run at 4:00 every day)                                                                                          | -           |
 
 ### For `restore`
 
 #### Required
 
-| Variable              | Description                                                                         |     |
-| --------------------- | ----------------------------------------------------------------------------------- | --- |
-| AWS_ACCESS_KEY_ID     | Your IAM Access Key ID                                                              |     |
-| AWS_SECRET_ACCESS_KEY | Your IAM Secret Access Key                                                          |     |
-| TARGET_BUCKET_URL     | Target Bucket URL ([s3://...\|gs://...]). **URL is needed to be end with '/'**      |     |
-| TARGET_FILE           | Target S3 or GS file name to restore                                                |     |
+| Variable                | Description                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `AWS_ACCESS_KEY_ID`     | Your IAM Access Key ID                                                            |
+| `AWS_SECRET_ACCESS_KEY` | Your IAM Secret Access Key                                                        |
+| `GCP_ACCESS_KEY_ID`     | Your GCP Access Key                                                               |
+| `GCP_SECRET_ACCESS_KEY` | Your GCP Secret                                                                   |
+| `GCP_PROJECT_ID`        | Your GCP Project ID                                                               |
+| `TARGET_BUCKET_URL`     | Target Bucket URL ([s3://...  or gs://...]). **URL is needed to be end with '/'** |
+| `TARGET_FILE`           | Target S3 or GS file name to restore                                              |
 
 #### Optional
 
-| Variable          | Description                               | Default |
-| ----------------- | ----------------------------------------- | ------- |
-| GCP_ACCESS_KEY_ID     | Your GCP Access Key                                                                 |     |
-| GCP_SECRET_ACCESS_KEY | Your GCP Secret                                                                     |     |
-| GCP_PROJECT_ID        | Your GCP Project ID                                                                 |     |
-| MARIADB_HOST      | Target MariaDB Host                       | mongo   |
-| MARIADB_DBNAME    | Target DB name                            | -       |
-| MARIADB_USERNAME  | DB login username                         | -       |
-| MARIADB_PASSWORD  | DB login password                         | -       |
-| MARIADB_AUTHDB    | Authentication DB name                    | -       |
-| MONGORESTORE_OPTS | Options list of mongorestore. (ex --drop) | -       |
+| Variable           | Description                     | Default   |
+| ------------------ | ------------------------------- | --------- |
+| `MARIADB_HOST`     | Target MariaDB Host             | `"mongo"` |
+| `MARIADB_DBNAME`   | Target DB name                  | -         |
+| `MARIADB_USERNAME` | DB login username               | -         |
+| `MARIADB_PASSWORD` | DB login password               | -         |
+| `MYSQL_OPTS`       | Options list of mysql (ex `-v`) | -         |
