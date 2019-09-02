@@ -1,9 +1,9 @@
 #!/bin/bash -e
 
 # settings
-MONGODB_HOST=${MONGODB_HOST:-mongo}
+MARIADB_HOST=${MARIADB_HOST:-mariadb}
 TARGET_FILE=${TARGET_FILE}
-MONGORESTORE_OPTS=${MONGORESTORE_OPTS:-}
+MYSQL_OPTS=${MYSQL_OPTS:-}
 
 # start script
 CWD=`/usr/bin/dirname $0`
@@ -13,15 +13,10 @@ cd $CWD
 echo "=== $0 started at `/bin/date "+%Y/%m/%d %H:%M:%S"` ==="
 
 TMPDIR="/tmp"
-TARGET_DIRNAME="mongodump"
-TARGET="${TMPDIR}/${TARGET_DIRNAME}"
-TAR_CMD="/bin/tar"
-TAR_OPTS="jxvf"
+TARGET="${TMPDIR}/${TARGET_FILE}"
+COMPRESS_CMD="bzip2"
+COMPRESSED_FULLURL=${TARGET_BUCKET_URL}${TARGET_FILE}
 
-DIRNAME=`/usr/bin/dirname ${TARGET}`
-BASENAME=`/usr/bin/basename ${TARGET}`
-TARBALL_FULLPATH="${TMPDIR}/${TARGET_FILE}"
-TARBALL_FULLURL=${TARGET_BUCKET_URL}${TARGET_FILE}
 
 # check parameters
 if [ "x${TARGET_BUCKET_URL}" == "x" ]; then
@@ -35,26 +30,18 @@ fi
 
 if [ `echo $TARGET_BUCKET_URL | cut -f1 -d":"` == "s3" ]; then
   # download tarball from Amazon S3
-  s3_copy_file ${TARBALL_FULLURL} ${TARBALL_FULLPATH}
+  s3_copy_file ${COMPRESSED_FULLURL} ${TARGET}
 elif [ `echo $TARGET_BUCKET_URL | cut -f1 -d":"` == "gs" ]; then
-  gs_copy_file ${TARBALL_FULLURL} ${TARBALL_FULLPATH}
+  gs_copy_file ${COMPRESSED_FULLURL} ${TARGET}
 fi
 
-# run tar command
-echo "expands ${TARGET}..."
-time ${TAR_CMD} ${TAR_OPTS} ${TARBALL_FULLPATH} -C ${DIRNAME} ${BASENAME}
+# run bzip2 command/restore database
+if [ "x${MARIADB_USERNAME}" != "x" ]; then
+  MYSQL_OPTS="${MYSQL_OPTS} -u ${MARIADB_USERNAME}"
+  if [ "x${MARIADB_PASSWORD}" != "x" ]; then
+    MYSQL_OPTS="${MYSQL_OPTS} -p${MARIADB_PASSWORD}"
+  fi
+fi
 
-
-# restore database
-if [ "x${MONGODB_DBNAME}" != "x" ]; then
-  MONGORESTORE_OPTS="${MONGORESTORE_OPTS} -d ${MONGODB_DBNAME}"
-  TARGET=${TARGET}/${MONGODB_DBNAME}
-fi
-if [ "x${MONGODB_USERNAME}" != "x" ]; then
-  MONGORESTORE_OPTS="${MONGORESTORE_OPTS} -u ${MONGODB_USERNAME} -p ${MONGODB_PASSWORD}"
-fi
-if [ "x${MONGODB_AUTHDB}" != "x" ]; then
-  MONGORESTORE_OPTS="${MONGORESTORE_OPTS} --authenticationDatabase ${MONGODB_AUTHDB}"
-fi
-echo "restore MongoDB..."
-mongorestore -h ${MONGODB_HOST} -v ${TARGET} ${MONGORESTORE_OPTS}
+echo "expand ${TARGET} and restore..."
+time ${COMPRESS_CMD} -dc ${TARGET} | mysql -h ${MARIADB_HOST} ${MYSQL_OPTS}
