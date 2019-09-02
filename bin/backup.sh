@@ -4,7 +4,6 @@
 BACKUPFILE_PREFIX=${BACKUPFILE_PREFIX:-backup}
 MARIADB_HOST=${MARIADB_HOST:-mariadb}
 CRONMODE=${CRONMODE:-false}
-#MARIADB_HOST=
 #MARIADB_DBNAME=
 #MARIADB_USERNAME=
 #MARIADB_PASSWORD=
@@ -24,9 +23,7 @@ TMPDIR="/tmp"
 TARGET_FILENAME="${BACKUPFILE_PREFIX}-${NOW}.sql"
 TARGET="${TMPDIR}/${TARGET_FILENAME}"
 COMPRESS_CMD="bzip2"
-
-DIRNAME=`/usr/bin/dirname ${TARGET}`
-BASENAME=`/usr/bin/basename ${TARGET}`
+COMPRESS_OPTS=""
 COMPRESSED_FULLPATH="${TMPDIR}/${TARGET_FILENAME}.bz2"
 
 
@@ -59,7 +56,7 @@ mysqldump -h ${MARIADB_HOST} ${MYSQLDUMP_OPTS} > ${TARGET}
 
 # run bzip2 command
 echo "backup ${TARGET}..."
-time ${COMPRESS_CMD} ${TARGET}
+time ${COMPRESS_CMD} ${COMPRESS_OPTS} ${TARGET}
 
 if [ `echo $TARGET_BUCKET_URL | cut -f1 -d":"` == "s3" ]; then
   # transfer tarball to Amazon S3
