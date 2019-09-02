@@ -19,13 +19,13 @@ Requirements
 OR
 
 * Google Cloud Interoperable storage access keys (see https://cloud.google.com/storage/docs/migrating#keys)
-  * GCP_ACCESS_KEY_ID, GCP_SECRET_ACCESS_KEY, and GCP_PROJECT_ID are only required if using HMAC authentication.
+  * `GCP_ACCESS_KEY_ID`, `GCP_SECRET_ACCESS_KEY`, and `GCP_PROJECT_ID` are only required if using HMAC authentication.
   * When using oauth authentication, a docker mount ` -v ~:/mab` and is the can be added to save auth0 credentials to your home directory after mariadb-awesome-backup is run.  On subsequent runs, the same `~/.boto` file will be used for authentication.
   * The name 'mab' was chosen as the Docker container mount point simply because it's an acronym for "`m`ongodb-`a`wesome-`b`ackup").  The /mab mount point maps to the home directory of whatever user is used to run mariadb-awesome-backup, and is where the .boto file will be saved.
 
 Usage
 -----
-Note that either AWS_ or GCP_ vars are required not both.
+Note that either `AWS_` or `GCP_` vars are required not both.
 
 ```bash
 docker run --rm \
@@ -36,11 +36,11 @@ docker run --rm \
   [ -e GCP_PROJECT_ID=<Your GCP Project ID> \ ]
   -e TARGET_BUCKET_URL=<Target Bucket URL ([s3://...|gs://...])> \
   [ -e BACKUPFILE_PREFIX=<Prefix of Backup Filename (default: "backup") \ ]
-  [ -e MONGODB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
-  [ -e MONGODB_DBNAME=<Target DB name> \ ]
-  [ -e MONGODB_USERNAME=<DB login username> \ ]
-  [ -e MONGODB_PASSWORD=<DB login password> \ ]
-  [ -e MONGODB_AUTHDB=<Authentication DB name> \ ]
+  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
+  [ -e MARIADB_DBNAME=<Target DB name> \ ]
+  [ -e MARIADB_USERNAME=<DB login username> \ ]
+  [ -e MARIADB_PASSWORD=<DB login password> \ ]
+  [ -e MARIADB_AUTHDB=<Authentication DB name> \ ]
   [ -v ~:/mab \ ]
   weseek/mariadb-awesome-backup
 ```
@@ -62,11 +62,11 @@ docker run --rm \
   -e CRONMODE=true \
   -e CRON_EXPRESSION=<Cron expression (ex. "CRON_EXPRESSION='0 4 * * *'" if you want to run at 4:00 every day)> \
   [ -e BACKUPFILE_PREFIX=<Prefix of Backup Filename (default: "backup") \ ]
-  [ -e MONGODB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
-  [ -e MONGODB_DBNAME=<Target DB name> \ ]
-  [ -e MONGODB_USERNAME=<DB login username> \ ]
-  [ -e MONGODB_PASSWORD=<DB login password> \ ]
-  [ -e MONGODB_AUTHDB=<Authentication DB name> \ ]
+  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
+  [ -e MARIADB_DBNAME=<Target DB name> \ ]
+  [ -e MARIADB_USERNAME=<DB login username> \ ]
+  [ -e MARIADB_PASSWORD=<DB login password> \ ]
+  [ -e MARIADB_AUTHDB=<Authentication DB name> \ ]
   [ -v ~:/mab \ ]
   weseek/mariadb-awesome-backup
 ```
@@ -84,11 +84,11 @@ docker run --rm \
   [ -e GCP_PROJECT_ID=<Your GCP Project ID> \ ]
   -e TARGET_BUCKET_URL=<Target Bucket URL ([s3://...|gs://...])> \
   -e TARGET_FILE=<Target S3 or GS file name to restore> \
-  [ -e MONGODB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
-  [ -e MONGODB_DBNAME=<Target DB name> \ ]
-  [ -e MONGODB_USERNAME=<DB login username> \ ]
-  [ -e MONGODB_PASSWORD=<DB login password> \ ]
-  [ -e MONGODB_AUTHDB=<Authentication DB name> \ ]
+  [ -e MARIADB_HOST=<Target MariaDB Host (default: "mongo")> \ ]
+  [ -e MARIADB_DBNAME=<Target DB name> \ ]
+  [ -e MARIADB_USERNAME=<DB login username> \ ]
+  [ -e MARIADB_PASSWORD=<DB login password> \ ]
+  [ -e MARIADB_AUTHDB=<Authentication DB name> \ ]
   [ -e MONGORESTORE_OPTS=<Options list of mongorestore> \ ]
   [ -v ~:/mab \ ]
   weseek/mariadb-awesome-backup restore
@@ -116,11 +116,11 @@ Environment variables
 | GCP_SECRET_ACCESS_KEY | Your GCP Secret                                                       |         |
 | GCP_PROJECT_ID        | Your GCP Project ID                                                   |         |
 | BACKUPFILE_PREFIX | Prefix of Backup Filename                                                                                                                                                     | backup  |
-| MONGODB_HOST      | Target MariaDB Host                                                                                                                                                           | mongo   |
-| MONGODB_DBNAME    | Target DB name                                                                                                                                                                | -       |
-| MONGODB_USERNAME  | DB login username                                                                                                                                                             | -       |
-| MONGODB_PASSWORD  | DB login password                                                                                                                                                             | -       |
-| MONGODB_AUTHDB    | Authentication DB name                                                                                                                                                        | -       |
+| MARIADB_HOST      | Target MariaDB Host                                                                                                                                                           | mongo   |
+| MARIADB_DBNAME    | Target DB name                                                                                                                                                                | -       |
+| MARIADB_USERNAME  | DB login username                                                                                                                                                             | -       |
+| MARIADB_PASSWORD  | DB login password                                                                                                                                                             | -       |
+| MARIADB_AUTHDB    | Authentication DB name                                                                                                                                                        | -       |
 | CRONMODE          | If set "true", this container is executed in cron mode.  In cron mode, the script will be executed with the specified arguments and at the time specified by CRON_EXPRESSION. | "false" |
 | CRON_EXPRESSION   | Cron expression (ex. "CRON_EXPRESSION=0 4 * * *" if you want to run at 4:00 every day)                                                                                        | -       |
 
@@ -142,9 +142,9 @@ Environment variables
 | GCP_ACCESS_KEY_ID     | Your GCP Access Key                                                                 |     |
 | GCP_SECRET_ACCESS_KEY | Your GCP Secret                                                                     |     |
 | GCP_PROJECT_ID        | Your GCP Project ID                                                                 |     |
-| MONGODB_HOST      | Target MariaDB Host                       | mongo   |
-| MONGODB_DBNAME    | Target DB name                            | -       |
-| MONGODB_USERNAME  | DB login username                         | -       |
-| MONGODB_PASSWORD  | DB login password                         | -       |
-| MONGODB_AUTHDB    | Authentication DB name                    | -       |
+| MARIADB_HOST      | Target MariaDB Host                       | mongo   |
+| MARIADB_DBNAME    | Target DB name                            | -       |
+| MARIADB_USERNAME  | DB login username                         | -       |
+| MARIADB_PASSWORD  | DB login password                         | -       |
+| MARIADB_AUTHDB    | Authentication DB name                    | -       |
 | MONGORESTORE_OPTS | Options list of mongorestore. (ex --drop) | -       |
