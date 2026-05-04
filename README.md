@@ -1,3 +1,8 @@
+> [!WARNING]
+> This repository has been moved to https://github.com/weseek/awesome-database-backup.
+> 
+> Please see “Migration from Previous Repositories”.
+
 <!-- TODO: to enable integration with CircleCI
 [![CircleCI](https://circleci.com/gh/weseek/mariadb-awesome-backup/tree/master.svg?style=shield)](https://circleci.com/gh/weseek/mariadb-awesome-backup/tree/master)
 -->
